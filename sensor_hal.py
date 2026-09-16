@@ -15,12 +15,19 @@ except (ImportError, NotImplementedError):
 
 # Mock Sensor for testing on dev hardware
 class MockSensorHAL:
+    def __init__(self):
+        print("[HAL] Initialized MockSensorHAL Simulated Sensor")
+
     def read_telemetry(self):
         import random
         return {
                 "temperature_c": round(random.uniform(18.0, 30.0), 1),
                 "humidity_percent": round(random.uniform(40.0, 85.0), 1)
                 }
+    
+    def cleanup(self):
+        # Keeps compatibility with real sensor
+        pass
 
 # Reads the sensor data from the I2C bus
 class SensorHAL:
@@ -42,6 +49,15 @@ class SensorHAL:
         }
 
     def cleanup(self):
-        "Safely releases the I2C bus"
+        # Safely releases the I2C bus
         if hasattr(self.i2c, 'deinit'):
             self.i2c.deinit()
+
+# Returns the proper sensor
+# TODO: Add Mock sensor environment variable to toggle testing on
+def get_sensor():
+    if HARDWARE_AVAILABLE:
+        return SensorHAL()
+
+    else:
+        return MockSensorHAL()
